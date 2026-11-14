@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#050811" />
   <title>Last Light — Space Mission Design</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -10,54 +10,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="game-body">
-  <main id="game" class="game-world" aria-label="3D spacecraft assembly world">
-    <canvas id="spaceCanvas" aria-label="3D world. Use WASD to move, mouse to look, and E to interact."></canvas>
-    <div class="world-vignette" aria-hidden="true"></div>
-    <header class="game-hud">
-      <div class="world-title"><span class="brand-mark">✦</span><div><span class="world-kicker">LAST LIGHT · EARTH EVACUATION</span><strong>Outpost 09</strong></div></div>
-      <div class="earth-alert"><span class="alert-pulse"></span><div><strong>EARTH CRITICAL</strong><small>Atmospheric collapse · 06:42:18</small></div></div>
-      <div class="hud-actions"><button id="controlToggle" class="hud-button" type="button" aria-expanded="false" aria-controls="controlSidebar"><span>☷</span> Ship systems</button><button id="pauseButton" class="hud-icon" type="button" aria-label="Pause game">Ⅱ</button></div>
-    </header>
-    <div class="crosshair" aria-hidden="true"><i></i><b></b></div>
-    <div class="mission-banner"><span class="mission-icon">◈</span><div><strong>Build the ark. Save what remains.</strong><small>Find salvage in the supply crates and prepare the ship for launch.</small></div></div>
-    <div class="world-status"><span class="status-dot"></span><span id="worldStatus">SALVAGE FIELD · SECTOR 09</span><span class="status-divider"></span><span id="worldMass">SHIP MASS —</span></div>
-    <div id="interactionPrompt" class="interaction-prompt"><kbd>E</kbd><span>Interact</span></div>
-
-    <section class="hotbar-wrap" aria-label="Cargo inventory">
-      <div class="inventory-caption"><span>FIELD CARGO</span><span>Drag cargo onto the ship to install</span></div>
-      <div id="inventoryHotbar" class="inventory-hotbar"><div class="empty-inventory">Explore the crates to find ship components</div></div>
-    </section>
-
-    <aside id="objectPanel" class="object-panel" aria-hidden="true">
-      <div class="object-panel-top"><span class="panel-kicker">SALVAGE / OBJECT</span><button id="closeObjectPanel" class="close-button" type="button" aria-label="Close object panel">×</button></div>
-      <div id="objectPanelContent"></div>
-    </aside>
-
-    <aside id="controlSidebar" class="control-sidebar" aria-hidden="true">
-      <div class="sidebar-header"><div><span class="panel-kicker">ARK SYSTEMS · OUTPOST 09</span><h1>Ship control</h1></div><button id="closeControls" class="close-button" type="button" aria-label="Close ship controls">×</button></div>
-      <div class="sidebar-scroll">
-        <section class="sidebar-section mission-brief"><span class="section-overline">PRIMARY DIRECTIVE</span><h2>Get humanity off Earth.</h2><p>The planet's atmosphere is failing. Salvage components, balance ship resources, and launch the ark before the final window closes.</p><div class="countdown-row"><span>Launch window</span><strong>06:42:18</strong></div></section>
-        <section class="sidebar-section"><div class="section-heading"><h2>Mission profile</h2><span class="live-tag">● ACTIVE</span></div><h3 class="subheading">Choose a destination</h3><div id="objectiveList" class="card-list"></div><h3 class="subheading">Difficulty</h3><div id="difficultyList" class="chip-list"></div></section>
-        <section class="sidebar-section"><div class="section-heading"><h2>Ship resources</h2><span id="riskLevel" class="risk-label">Low risk</span></div><div id="resourceList" class="resource-list"></div><div class="readiness-inline"><span>Payload margin</span><strong id="payloadMargin">—</strong><span>Science fit</span><strong id="scienceFit">—</strong></div></section>
-        <section class="sidebar-section"><div class="section-heading"><h2>Install hardware</h2><span class="hint-label">Click or drag onto ship</span></div><h3 class="subheading">Bus systems</h3><div id="busList" class="config-list"></div><h3 class="subheading">Science payload</h3><div id="instrumentList" class="config-list"></div></section>
-        <section class="sidebar-section"><div class="section-heading"><h2>Flight plan</h2></div><h3 class="subheading">Orbit</h3><div id="orbitList" class="card-list small-card-list"></div><h3 class="subheading">Launch vehicle</h3><div id="launchList" class="card-list small-card-list"></div></section>
-        <section class="sidebar-section crew-section"><div class="section-heading"><h2>Flight crew</h2></div><label class="crew-select">Crew members<select id="teamSize"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label><div id="roleList" class="role-list"></div></section>
-        <section class="sidebar-section systems-section"><div class="section-heading"><div><span class="section-overline">INTERACTIVE SYSTEMS CHECK</span><h2>Flight console</h2></div><span id="taskProgress" class="task-progress">0 / 3</span></div><p class="sidebar-hint">Complete the ship checks before launch.</p>
-          <article class="task-card" data-task="power"><div class="task-heading"><span class="task-icon">⚡</span><div><h3>Route power</h3><p>Repeat the circuit sequence.</p></div></div><div id="powerSequence" class="power-sequence"></div><div id="powerButtons" class="power-buttons"></div></article>
-          <article class="task-card" data-task="calibration"><div class="task-heading"><span class="task-icon">◎</span><div><h3>Calibrate sensor</h3><p>Match the target within 3°.</p></div></div><div class="dial-readout"><span>Target <strong id="calibrationTarget">72</strong>°</span><output id="calibrationValue">50°</output></div><input id="calibrationDial" type="range" min="0" max="100" value="50" aria-label="Sensor calibration dial"/><button id="calibrationConfirm" class="task-button" type="button">Confirm calibration</button></article>
-          <article class="task-card" data-task="antenna"><div class="task-heading"><span class="task-icon">⌁</span><div><h3>Align antenna</h3><p>Match bearing within 3°.</p></div></div><div class="dial-readout"><span>Bearing <strong id="antennaTarget">38</strong>°</span><output id="antennaValue">50°</output></div><input id="antennaDial" type="range" min="0" max="100" value="50" aria-label="Antenna alignment dial"/><button id="antennaConfirm" class="task-button" type="button">Lock signal</button></article>
-          <p id="taskFeedback" class="task-feedback" aria-live="polite">Power up the panels to begin.</p>
-        </section>
-        <section class="sidebar-section report-section"><div class="section-heading"><h2>Flight review</h2><span class="report-caption">DESIGN REVIEW</span></div><div id="missionReport" class="mission-report"></div><button id="simulateMission" class="primary-button launch-button" type="button">Run flight simulation</button><button id="resetMission" class="reset-button" type="button">Reset mission</button></section>
-      </div>
-    </aside>
-
-    <div id="pauseOverlay" class="pause-overlay" aria-hidden="true"><div class="pause-card"><span class="panel-kicker">OUTPOST 09</span><h2>Mission paused</h2><p>The launch window is still ticking.</p><button id="resumeButton" class="primary-button" type="button">Resume mission</button></div></div>
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <div class="controls-legend"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>move</span><kbd>SHIFT</kbd><span>sprint</span><kbd>E</kbd><span>interact</span><kbd>ESC</kbd><span>release mouse</span></div>
-  </main>
-  <script src="script.js"></script>
-  <script type="module" src="game3d.js"></script>
+<body>
+<main id="game" class="game-world" aria-label="3D Earth evacuation salvage game">
+  <canvas id="spaceCanvas" aria-label="3D game. WASD to move, drag to look, click a crate or press E to open it."></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <header class="game-hud">
+    <div class="world-title"><span class="brand-mark">✦</span><div><span class="world-kicker">LAST LIGHT · EARTH EVACUATION</span><strong>Outpost 09</strong></div></div>
+    <div class="earth-alert"><span class="alert-pulse"></span><div><strong>EARTH CRITICAL</strong><small>Atmospheric collapse · evacuation underway</small></div></div>
+    <div class="hud-actions"><button id="controlToggle" class="hud-button" type="button" aria-expanded="false" aria-controls="controlSidebar"><span>☷</span> Ship systems</button><button id="pauseButton" class="hud-icon" type="button" aria-label="Pause game">Ⅱ</button></div>
+  </header>
+  <div class="crosshair" aria-hidden="true"><i></i><b></b></div>
+  <div class="mission-banner"><span class="mission-icon">◈</span><div><strong>Build the ark. Save what remains.</strong><small>Find blue-marked crates and recover ship components.</small></div></div>
+  <div class="world-status"><span class="status-dot"></span><span>SALVAGE FIELD · SECTOR 09</span><span class="status-divider"></span><span id="worldMass">SHIP MASS —</span></div>
+  <div id="interactionPrompt" class="interaction-prompt"><kbd>E</kbd><span>Interact</span></div>
+  <section class="hotbar-wrap" aria-label="Recovered cargo inventory"><div class="inventory-caption"><span>FIELD CARGO</span><span>Drag cargo onto the ship to install</span></div><div id="inventoryHotbar" class="inventory-hotbar"><div class="empty-inventory">Explore the crates to find ship components</div></div></section>
+  <aside id="objectPanel" class="object-panel" aria-hidden="true"><div class="object-panel-top"><span class="panel-kicker">SALVAGE / OBJECT</span><button id="closeObjectPanel" class="close-button" type="button" aria-label="Close object panel">×</button></div><div id="objectPanelContent"></div></aside>
+  <aside id="controlSidebar" class="control-sidebar" aria-hidden="true">
+    <div class="sidebar-header"><div><span class="panel-kicker">ARK SYSTEMS · OUTPOST 09</span><h1>Ship control</h1></div><button id="closeControls" class="close-button" type="button" aria-label="Close ship controls">×</button></div>
+    <div class="sidebar-scroll">
+      <section class="sidebar-section mission-brief"><span class="section-overline">PRIMARY DIRECTIVE</span><h2>Get humanity off Earth.</h2><p>Salvage components, balance ship resources, and plan an evacuation before the launch window closes.</p><div class="countdown-row"><span>Launch window</span><strong>06:42:18</strong></div></section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Mission profile</h2><span class="live-tag">● ACTIVE</span></div><h3 class="subheading">Choose a destination</h3><div id="objectiveList" class="card-list"></div><h3 class="subheading">Difficulty</h3><div id="difficultyList" class="chip-list"></div></section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Ship resources</h2><span id="riskLevel" class="risk-label">Low risk</span></div><div id="resourceList" class="resource-list"></div><div class="readiness-inline"><span>Payload margin</span><strong id="payloadMargin">—</strong><span>Science fit</span><strong id="scienceFit">—</strong></div></section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Component catalog</h2><span class="hint-label">Click to recover into cargo</span></div><h3 class="subheading">Bus systems</h3><div id="busList" class="config-list"></div><h3 class="subheading">Science payload</h3><div id="instrumentList" class="config-list"></div></section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Flight plan</h2></div><h3 class="subheading">Orbit</h3><div id="orbitList" class="card-list"></div><h3 class="subheading">Launch vehicle</h3><div id="launchList" class="card-list"></div></section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Flight crew</h2></div><label class="crew-select">Crew members<select id="teamSize"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label><div id="roleList" class="role-list"></div></section>
+      <section class="sidebar-section systems-section"><div class="section-heading"><div><span class="section-overline">INTERACTIVE SYSTEMS CHECK</span><h2>Flight console</h2></div><span id="taskProgress" class="task-progress">0 / 3</span></div><p class="sidebar-hint">Complete the ship checks before launch.</p>
+        <article class="task-card" data-task="power"><div class="task-heading"><span class="task-icon">⚡</span><div><h3>Route power</h3><p>Repeat the circuit sequence.</p></div></div><div id="powerSequence" class="power-sequence"></div><div id="powerButtons" class="power-buttons"></div></article>
+        <article class="task-card" data-task="calibration"><div class="task-heading"><span class="task-icon">◎</span><div><h3>Calibrate sensor</h3><p>Match the target within 3°.</p></div></div><div class="dial-readout"><span>Target <strong id="calibrationTarget">72</strong>°</span><output id="calibrationValue">50°</output></div><input id="calibrationDial" type="range" min="0" max="100" value="50" aria-label="Sensor calibration dial"><button id="calibrationConfirm" class="task-button" type="button">Confirm calibration</button></article>
+        <article class="task-card" data-task="antenna"><div class="task-heading"><span class="task-icon">⌁</span><div><h3>Align antenna</h3><p>Match bearing within 3°.</p></div></div><div class="dial-readout"><span>Bearing <strong id="antennaTarget">38</strong>°</span><output id="antennaValue">50°</output></div><input id="antennaDial" type="range" min="0" max="100" value="50" aria-label="Antenna alignment dial"><button id="antennaConfirm" class="task-button" type="button">Lock signal</button></article>
+        <p id="taskFeedback" class="task-feedback" aria-live="polite">Power up the panels to begin.</p>
+      </section>
+      <section class="sidebar-section"><div class="section-heading"><h2>Flight review</h2><span class="report-caption">DESIGN REVIEW</span></div><div id="missionReport" class="mission-report"></div><button id="simulateMission" class="primary-button launch-button" type="button">Run flight simulation</button><button id="resetMission" class="reset-button" type="button">Reset mission</button></section>
+    </div>
+  </aside>
+  <div id="pauseOverlay" class="pause-overlay" aria-hidden="true"><div class="pause-card"><span class="panel-kicker">OUTPOST 09</span><h2>Mission paused</h2><p>Resume when your crew is ready.</p><button id="resumeButton" class="primary-button" type="button">Resume mission</button></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div class="controls-legend"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>move</span><kbd>SHIFT</kbd><span>sprint</span><kbd>E</kbd><span>interact</span><span class="look-hint">Drag scene to look</span></div>
+</main>
+<script src="script.js"></script>
+<script type="module" src="game3d.js"></script>
 </body>
 </html>
