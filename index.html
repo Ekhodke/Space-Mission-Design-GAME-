@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Mission Design Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Mission Control</p>
+          <h1>Space Mission Design Game</h1>
+        </div>
+        <div class="header-actions">
+          <button id="resetMission" class="ghost-button">Reset</button>
+          <button id="simulateMission" class="primary-button">Simulate Mission</button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <aside class="panel mission-panel">
+          <div class="panel-header">
+            <h2>Mission Setup</h2>
+          </div>
+
+          <section>
+            <h3>Objective</h3>
+            <div id="objectiveList" class="card-list"></div>
+          </section>
+
+          <section>
+            <h3>Difficulty</h3>
+            <div id="difficultyList" class="chip-list"></div>
+          </section>
+
+          <section>
+            <h3>Team Mode</h3>
+            <div class="team-size-row">
+              <label for="teamSize">Players</label>
+              <select id="teamSize">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div id="roleList" class="role-list"></div>
+          </section>
+        </aside>
+
+        <section class="panel center-panel">
+          <div class="panel-header">
+            <h2>Spacecraft Configuration</h2>
+          </div>
+
+          <div class="config-grid">
+            <section>
+              <h3>Bus Systems</h3>
+              <div id="busList" class="config-list"></div>
+            </section>
+
+            <section>
+              <h3>Scientific Instruments</h3>
+              <div id="instrumentList" class="config-list"></div>
+            </section>
+          </div>
+
+          <div class="config-grid compact-grid">
+            <section>
+              <h3>Orbit</h3>
+              <div id="orbitList" class="card-list small-card-list"></div>
+            </section>
+
+            <section>
+              <h3>Launch Vehicle</h3>
+              <div id="launchList" class="card-list small-card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="panel resources-panel">
+          <div class="panel-header">
+            <h2>Mission Dashboard</h2>
+          </div>
+
+          <div id="resourceList" class="resource-list"></div>
+
+          <div class="status-box">
+            <h3>Mission Readiness</h3>
+            <div class="readiness-row">
+              <span>Payload Margin</span>
+              <strong id="payloadMargin">0 kg</strong>
+            </div>
+            <div class="readiness-row">
+              <span>Scientific Fit</span>
+              <strong id="scienceFit">0%</strong>
+            </div>
+            <div class="readiness-row">
+              <span>Risk Level</span>
+              <strong id="riskLevel">Low</strong>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <section class="panel bottom-panel">
+        <div class="panel-header">
+          <h2>Mission Summary</h2>
+        </div>
+        <div id="missionReport" class="mission-report"></div>
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
