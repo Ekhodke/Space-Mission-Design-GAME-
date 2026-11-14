@@ -1,134 +1,92 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
 
-const canvas = document.getElementById('spaceCanvas');
-const stage = document.getElementById('spacecraftStage');
-if (!canvas || !stage) throw new Error('Spacecraft assembly stage is missing.');
+const canvas=document.getElementById('spaceCanvas');
+const sidebar=document.getElementById('controlSidebar');
+const objectPanel=document.getElementById('objectPanel');
+const objectContent=document.getElementById('objectPanelContent');
+const prompt=document.getElementById('interactionPrompt');
+const world=document.getElementById('game');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#070912');
+scene.fog=new THREE.FogExp2('#090c18',.009);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,600);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+scene.add(new THREE.HemisphereLight(0xadc7ff,0x362a30,1.3));
+const key=new THREE.DirectionalLight(0xffc28a,2.4);key.position.set(-25,40,20);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
+const blueFill=new THREE.PointLight(0x67aaff,90,120);blueFill.position.set(12,13,16);scene.add(blueFill);
+const earthGlow=new THREE.PointLight(0xff4b2d,240,100);earthGlow.position.set(-5,12,-78);scene.add(earthGlow);
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color('#091725');
-scene.fog = new THREE.Fog('#091725', 13, 30);
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-camera.position.set(7.5, 5.2, 9.5);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
+// A deep star field, nebula clouds, and the burning Earth establish the end-of-world setting.
+const stars=new THREE.BufferGeometry(),starPositions=[],starColors=[];
+for(let i=0;i<3200;i++){const r=180+Math.random()*180,theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1);starPositions.push(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));const warm=Math.random()<.12;starColors.push(warm?1:.56+Math.random()*.4,warm?.52:.7+Math.random()*.3,warm?.3:1);}
+stars.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));stars.setAttribute('color',new THREE.Float32BufferAttribute(starColors,3));const starMat=new THREE.PointsMaterial({size:.72,vertexColors:true,transparent:true,opacity:.9,sizeAttenuation:true});scene.add(new THREE.Points(stars,starMat));
+const nebula=new THREE.Mesh(new THREE.SphereGeometry(280,40,30),new THREE.MeshBasicMaterial({color:0x17112a,side:THREE.BackSide,transparent:true,opacity:.46}));scene.add(nebula);
+const earthGroup=new THREE.Group();earthGroup.position.set(-22,19,-115);scene.add(earthGroup);
+const earth=new THREE.Mesh(new THREE.SphereGeometry(22,64,48),new THREE.MeshStandardMaterial({color:0x52667c,roughness:.92,metalness:.05,emissive:0x381a1c,emissiveIntensity:.3}));earthGroup.add(earth);
+const earthCloud=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,36),new THREE.MeshBasicMaterial({color:0xe75a37,side:THREE.BackSide,transparent:true,opacity:.2}));earthGroup.add(earthCloud);
+const atmosphere=new THREE.Mesh(new THREE.SphereGeometry(24,48,32),new THREE.MeshBasicMaterial({color:0xff6542,side:THREE.BackSide,transparent:true,opacity:.17}));earthGroup.add(atmosphere);
+const landMat=new THREE.MeshStandardMaterial({color:0x473b39,roughness:1,emissive:0x261514,emissiveIntensity:.5});
+for(let i=0;i<18;i++){const patch=new THREE.Mesh(new THREE.CircleGeometry(1.6+Math.random()*4,7),landMat);patch.position.set((Math.random()-.5)*35,(Math.random()-.5)*34,Math.random()*5);patch.lookAt(0,0,35);patch.scale.y=.35;earth.add(patch);}
+const moon=new THREE.Mesh(new THREE.SphereGeometry(6,32,24),new THREE.MeshStandardMaterial({color:0x90939c,roughness:1}));moon.position.set(36,28,-130);scene.add(moon);
 
-scene.add(new THREE.HemisphereLight(0xb9e8ff, 0x162638, 2.1));
-const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
-keyLight.position.set(5, 9, 6);
-keyLight.castShadow = true;
-scene.add(keyLight);
-const fillLight = new THREE.PointLight(0x55c9ff, 35, 18);
-fillLight.position.set(-5, 3, 2);
-scene.add(fillLight);
+// Rocky outpost ground, cracks, rocks, and discarded salvage.
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(440,440),new THREE.MeshStandardMaterial({color:0x25252b,roughness:1,metalness:.08}));ground.rotation.x=-Math.PI/2;ground.position.y=-.16;ground.receiveShadow=true;scene.add(ground);
+const groundGrid=new THREE.GridHelper(440,100,0x514438,0x292831);groundGrid.position.y=-.14;groundGrid.material.transparent=true;groundGrid.material.opacity=.16;scene.add(groundGrid);
+const rockMat=new THREE.MeshStandardMaterial({color:0x56504c,roughness:1}),darkRock=new THREE.MeshStandardMaterial({color:0x34343b,roughness:1});
+for(let i=0;i<110;i++){const angle=Math.random()*Math.PI*2,dist=13+Math.random()*85,size=.25+Math.random()*1.8;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(size,0),i%3?rockMat:darkRock);rock.position.set(Math.cos(angle)*dist,size*.48,Math.sin(angle)*dist);rock.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);rock.scale.y=.45+Math.random()*.7;rock.castShadow=true;rock.receiveShadow=true;scene.add(rock);}
+for(let i=0;i<34;i++){const crack=new THREE.Mesh(new THREE.BoxGeometry(.035,.015,2+Math.random()*6),new THREE.MeshBasicMaterial({color:i%3===0?0xc64e30:0x11151c,transparent:true,opacity:.46}));crack.position.set((Math.random()-.5)*85,-.13,(Math.random()-.5)*85);crack.rotation.y=Math.random()*Math.PI;scene.add(crack);}
 
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#0a1926', roughness: 0.88, metalness: 0.12 }));
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.02;
-floor.receiveShadow = true;
-scene.add(floor);
-const grid = new THREE.GridHelper(28, 28, 0x1e526e, 0x15344a);
-grid.position.y = 0.006;
-scene.add(grid);
+// Modular ark ship is the main build target and can be approached and inspected.
+const ship=new THREE.Group();ship.position.set(0,2.4,-12);scene.add(ship);
+const hullMat=new THREE.MeshStandardMaterial({color:0xb8c1c6,metalness:.62,roughness:.35}),steel=new THREE.MeshStandardMaterial({color:0x566879,metalness:.78,roughness:.3}),gold=new THREE.MeshStandardMaterial({color:0xc79552,metalness:.55,roughness:.36});
+function mesh(parent,geometry,material,pos,rotation){const m=new THREE.Mesh(geometry,material);m.position.set(...pos);if(rotation)m.rotation.set(...rotation);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+mesh(ship,new THREE.CylinderGeometry(1.6,2.35,8,12),hullMat,[0,0,0],[0,0,Math.PI/2]);mesh(ship,new THREE.ConeGeometry(2.35,4,12),steel,[6,0,0],[0,0,-Math.PI/2]);mesh(ship,new THREE.CylinderGeometry(1.8,2.3,1.5,12),steel,[-4.5,0,0],[0,0,Math.PI/2]);
+for(const side of [-1,1]){mesh(ship,new THREE.BoxGeometry(8,.17,1),steel,[0,0,side*3.3]);const solarMat=new THREE.MeshStandardMaterial({color:0x277cb0,emissive:0x092a48,metalness:.4,roughness:.35});const solar=mesh(ship,new THREE.BoxGeometry(8,.12,4),solarMat,[-1,.1,side*5.4]);solar.userData.shipPart='solar-array';for(let j=0;j<7;j++)mesh(ship,new THREE.BoxGeometry(.035,.03,3.8),new THREE.MeshBasicMaterial({color:0x74c9f1}),[-4.5+j*1.15,.18,side*5.4]);}
+mesh(ship,new THREE.CylinderGeometry(.8,1.2,1.4,12),gold,[-4.1,0,0],[0,0,Math.PI/2]);
+const shipLight=new THREE.PointLight(0x49bfff,28,30);shipLight.position.set(0,3,-11);scene.add(shipLight);
+const shipPad=new THREE.Mesh(new THREE.CylinderGeometry(14,15,.3,48),new THREE.MeshStandardMaterial({color:0x393d43,metalness:.5,roughness:.65}));shipPad.position.set(0,-.05,-12);shipPad.receiveShadow=true;scene.add(shipPad);
+for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const lamp=mesh(scene,new THREE.BoxGeometry(.28,.18,.28),new THREE.MeshBasicMaterial({color:0xff653c}),[Math.cos(a)*12,.18,-12+Math.sin(a)*12]);}
 
-// A compact modular spacecraft with clickable, removable hardware.
-const ship = new THREE.Group();
-scene.add(ship);
-const metal = new THREE.MeshStandardMaterial({ color: '#9eb6c7', metalness: 0.78, roughness: 0.3 });
-const white = new THREE.MeshStandardMaterial({ color: '#e5edf1', metalness: 0.45, roughness: 0.38 });
-const dark = new THREE.MeshStandardMaterial({ color: '#203c50', metalness: 0.65, roughness: 0.34 });
-const gold = new THREE.MeshStandardMaterial({ color: '#f0b955', metalness: 0.55, roughness: 0.35 });
-const hull = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.74, 1.28), white);
-hull.castShadow = true; hull.receiveShadow = true; ship.add(hull);
-const nose = new THREE.Mesh(new THREE.ConeGeometry(0.52, 1.05, 8), metal);
-nose.rotation.z = -Math.PI / 2; nose.position.x = 1.72; nose.castShadow = true; ship.add(nose);
-const engine = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.38, 0.72, 12), dark);
-engine.rotation.z = Math.PI / 2; engine.position.x = -1.5; engine.castShadow = true; ship.add(engine);
-const engineGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 0.15, 12), new THREE.MeshBasicMaterial({ color: '#57d7ff' }));
-engineGlow.rotation.z = Math.PI / 2; engineGlow.position.x = -1.92; ship.add(engineGlow);
-const panelMat = new THREE.MeshStandardMaterial({ color: '#236e9b', emissive: '#0c3856', metalness: 0.35, roughness: 0.42 });
-for (const side of [-1, 1]) {
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.12, 0.15), metal); arm.position.set(-0.15, 0, side * 1.1); ship.add(arm);
-  const solar = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.08, 0.78), panelMat); solar.position.set(-0.15, 0.02, side * 1.75); solar.castShadow = true; ship.add(solar);
-  for (let i = 0; i < 5; i++) { const line = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.012, 0.018), new THREE.MeshBasicMaterial({ color: '#60bce6' })); line.position.set(-0.15, 0.07, side * (1.43 + i * 0.16)); ship.add(line); }
-}
-const dish = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), white);
-dish.position.set(-0.7, 0.62, 0.15); dish.rotation.x = -0.5; dish.castShadow = true; ship.add(dish);
-const dishStem = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.46, 8), gold); dishStem.position.set(-0.7, 0.42, 0.15); ship.add(dishStem);
-ship.position.set(0, 2.05, 0);
+// A simple astronaut avatar: third-person movement makes the scene playable without assets.
+const player=new THREE.Group();scene.add(player);
+const suit=new THREE.MeshStandardMaterial({color:0xd9e1e4,roughness:.58}),visorMat=new THREE.MeshStandardMaterial({color:0x3e9fc2,metalness:.72,roughness:.18,emissive:0x102e42}),packMat=new THREE.MeshStandardMaterial({color:0x354958,metalness:.45,roughness:.48});
+mesh(player,new THREE.CapsuleGeometry(.43,.75,5,10),suit,[0,1.08,0]);mesh(player,new THREE.SphereGeometry(.39,20,16),suit,[0,1.87,0]);const visorMesh=mesh(player,new THREE.SphereGeometry(.29,18,12),visorMat,[0,1.88,.28]);visorMesh.scale.set(1,.75,.43);mesh(player,new THREE.BoxGeometry(.5,.62,.3),packMat,[0,1.08,-.42]);
+for(const side of [-1,1]){mesh(player,new THREE.CapsuleGeometry(.13,.5,4,8),suit,[side*.48,1.06,0],[0,0,side*-.15]);mesh(player,new THREE.BoxGeometry(.25,.3,.38),packMat,[side*.19,.22,.04]);}
+mesh(player,new THREE.BoxGeometry(.2,.2,.04),gold,[.2,1.22,.33]);player.position.set(0,0,4);
 
-// Stylized 3D crew: suit, helmet, visor, oxygen pack, arms and boots.
-function makeAstronaut(x, z, suitColor, visorColor, label) {
-  const group = new THREE.Group();
-  const suitMat = new THREE.MeshStandardMaterial({ color: suitColor, roughness: 0.58, metalness: 0.1 });
-  const visorMat = new THREE.MeshStandardMaterial({ color: visorColor, metalness: 0.7, roughness: 0.18, emissive: visorColor, emissiveIntensity: 0.08 });
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.36, 0.66, 5, 10), suitMat); body.position.y = 1.05; body.castShadow = true; group.add(body);
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.37, 20, 16), suitMat); helmet.position.y = 1.78; helmet.castShadow = true; group.add(helmet);
-  const visor = new THREE.Mesh(new THREE.SphereGeometry(0.275, 20, 12), visorMat); visor.scale.set(1, 0.76, 0.42); visor.position.set(0, 1.79, 0.28); group.add(visor);
-  const pack = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.57, 0.22), dark); pack.position.set(0, 1.1, -0.34); pack.castShadow = true; group.add(pack);
-  for (const side of [-1, 1]) {
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.45, 4, 8), suitMat); arm.position.set(side * 0.43, 1.05, 0.02); arm.rotation.z = side * -0.22; arm.castShadow = true; group.add(arm);
-    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 0.33), dark); boot.position.set(side * 0.18, 0.16, 0.05); boot.castShadow = true; group.add(boot);
-  }
-  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.035), gold); badge.position.set(0.17, 1.22, 0.345); group.add(badge);
-  group.position.set(x, 0, z); group.userData.label = label; scene.add(group);
-  return group;
-}
-const crew = [makeAstronaut(-3.2, 0.7, '#ecf2f5', '#55caff', 'Commander'), makeAstronaut(3.1, 0.45, '#e8a94b', '#a8e8ff', 'Engineer')];
-crew[0].rotation.y = -0.52; crew[1].rotation.y = 0.6;
+const componentMap=new Map(),crateMap=new Map(),clickables=[];
+const cargoCatalog=()=>window.spaceMissionGameDesign?.catalog||[];
+const componentColor=id=>({'composite-bus':0x5bb9db,'solar-array':0x329bd1,'battery-pack':0x50c994,'deep-space-comms':0xe9b34d,'autonomy-core':0xbc8cff,optical:0x75cfff,thermal:0xff805e,radar:0x7ee2bd,spectral:0xe2a8ff,communications:0xf3ce68}[id]||0x72c8ed);
+function addInstalledPart(item){if(componentMap.has(item.id))return;const group=new THREE.Group();const mat=new THREE.MeshStandardMaterial({color:componentColor(item.id),emissive:componentColor(item.id),emissiveIntensity:.12,metalness:.52,roughness:.3});const instrument=item.category==='instrument';mesh(group,instrument?new THREE.CylinderGeometry(.35,.47,.7,12):new THREE.BoxGeometry(.9,.72,.84),mat,[0,0,0],instrument?[Math.PI/2,0,0]:null);const index=componentMap.size;group.position.set(-1.9+(index%4)*1.25,1.25+Math.floor(index/4)*.85,(index%2?1:-1)*1.45);group.userData={kind:'installed',component:item};ship.add(group);componentMap.set(item.id,group);clickables.push(group);}
+function rebuildInstalled(items=[]){for(const [id,g] of componentMap){ship.remove(g);const i=clickables.indexOf(g);if(i>=0)clickables.splice(i,1);}componentMap.clear();items.forEach(addInstalledPart);}
+function makeCrate(item,index){const g=new THREE.Group();const wood=new THREE.MeshStandardMaterial({color:index%2?0x79502f:0x93633a,roughness:.91}),edge=new THREE.MeshStandardMaterial({color:0x3e332a,metalness:.28,roughness:.72}),glow=new THREE.MeshStandardMaterial({color:componentColor(item.id),emissive:componentColor(item.id),emissiveIntensity:.35});mesh(g,new THREE.BoxGeometry(1.8,1.25,1.45),wood,[0,.64,0]);for(const x of [-.64,.64])mesh(g,new THREE.BoxGeometry(.13,1.34,.1),edge,[x,.64,.76]);for(const y of [.22,1.05])mesh(g,new THREE.BoxGeometry(1.75,.12,.1),edge,[0,y,.76]);mesh(g,new THREE.BoxGeometry(.45,.22,.04),glow,[0,.69,.79]);const label=document.createElement('canvas');label.width=256;label.height=64;const ctx=label.getContext('2d');ctx.fillStyle='#18212a';ctx.fillRect(0,0,256,64);ctx.fillStyle='#d8e6e8';ctx.font='bold 20px Inter, sans-serif';ctx.textAlign='center';ctx.fillText(item.name.toUpperCase().slice(0,22),128,39);const tex=new THREE.CanvasTexture(label);const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.35,.34),new THREE.MeshBasicMaterial({map:tex,transparent:true}));sign.position.set(0,.68,.84);g.add(sign);g.userData={kind:'crate',item,crateIndex:index};const positions=[[-7,0,1],[7,0,2],[-9,0,-7],[8,0,-10],[-5,0,-18],[9,0,-22],[14,0,-3],[-15,0,-12],[4,0,10],[-12,0,8]];g.position.set(...positions[index%positions.length]);g.rotation.y=(Math.random()-.5)*.8;scene.add(g);crateMap.set(item.id,g);clickables.push(g);return g;}
+function populateCrates(){for(const g of crateMap.values()){scene.remove(g);const i=clickables.indexOf(g);if(i>=0)clickables.splice(i,1);}crateMap.clear();cargoCatalog().forEach(makeCrate);}
 
-// Tool cabinets and soft studio lights make the hangar feel occupied.
-for (const x of [-5.1, 5.1]) {
-  const cabinet = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.5, 0.72), dark); cabinet.position.set(x, 1.25, -2.6); cabinet.castShadow = true; scene.add(cabinet);
-  for (let y = 0; y < 3; y++) { const drawer = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.04, 0.74), gold); drawer.position.set(x, 0.65 + y * 0.55, -2.6); scene.add(drawer); }
-}
-const starGroup = new THREE.Group();
-for (let i = 0; i < 100; i++) { const dot = new THREE.Mesh(new THREE.SphereGeometry(0.018 + Math.random() * 0.022, 5, 5), new THREE.MeshBasicMaterial({ color: i % 4 === 0 ? '#69d5ff' : '#b4d8e9', transparent: true, opacity: 0.45 + Math.random() * 0.5 })); dot.position.set((Math.random() - .5) * 25, 3 + Math.random() * 12, -6 - Math.random() * 15); starGroup.add(dot); }
-scene.add(starGroup);
+const raycaster=new THREE.Raycaster(),center=new THREE.Vector2(0,0),pointer=new THREE.Vector2();let yaw=0,pitch=-.12,locked=false,nearby=null,toastTimer;
+function toast(text){const el=document.getElementById('toast');el.textContent=text;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),2300);}
+function setSidebar(open){sidebar.classList.toggle('open',open);sidebar.setAttribute('aria-hidden',String(!open));document.getElementById('controlToggle').setAttribute('aria-expanded',String(open));if(open&&document.pointerLockElement===canvas)document.exitPointerLock();}
+function showObjectPanel(object){if(!object)return;objectPanel.classList.add('open');objectPanel.setAttribute('aria-hidden','false');const item=object.userData.item||object.userData.component;const isCrate=object.userData.kind==='crate';const isInstalled=object.userData.kind==='installed';const title=isCrate?'Supply crate':item?.name||'Ark spacecraft';const description=item?.description||'The ark is humanity’s last chance. Build a balanced spacecraft and prepare the flight systems.';const already=window.spaceMissionGameDesign?.components?.some(x=>x.id===item?.id);objectContent.innerHTML=`<span class="object-type">${isCrate?'FIELD SALVAGE':isInstalled?'INSTALLED HARDWARE':'FLIGHT VEHICLE'}</span><h2>${title}</h2><p class="object-description">${description}</p>${item?`<div class="object-stats"><div><span>Mass</span><strong>${item.mass} kg</strong></div><div><span>Power</span><strong>${item.power} kW</strong></div><div><span>Budget</span><strong>$${item.cost}M</strong></div><div><span>${isCrate?'Payload':'Data'}</span><strong>${isCrate?'Salvage':`${item.data} GB/day`}</strong></div></div><div class="object-adjust"><label for="massAdjustment">Mass adjustment <output id="massOutput">${item.mass} kg</output></label><input id="massAdjustment" type="range" min="50" max="${Math.max(500,item.mass*2)}" value="${item.mass}"/><small>Mass is fixed for flight hardware. Review the trade-off before installation.</small></div><button id="objectAction" class="primary-button object-action" type="button">${isInstalled?'Remove from ship':already?'Already installed':'Recover & install'}</button>`:`<div class="object-stats"><div><span>Payload margin</span><strong>${document.getElementById('payloadMargin').textContent}</strong></div><div><span>Ship mass</span><strong>${window.spaceMissionGameDesign?.totalMass||'—'} kg</strong></div></div><button id="objectAction" class="primary-button object-action" type="button">Open flight controls</button>`}`;
+ const range=document.getElementById('massAdjustment');if(range)range.addEventListener('input',()=>document.getElementById('massOutput').value=`${range.value} kg`);document.getElementById('objectAction').addEventListener('click',()=>{if(!item){setSidebar(true);closeObjectPanel();return;}if(isInstalled){window.spaceMissionGameDesign?.removeComponent(item.category,item.id);toast(`${item.name} removed from the ark`);}else if(already){toast(`${item.name} is already installed. Remove it first to change the design.`);}else{window.spaceMissionGameDesign?.addComponent(item.category,item.id);crateMap.get(item.id)?.userData&&(crateMap.get(item.id).userData.recovered=true);const crate=crateMap.get(item.id);if(crate){scene.remove(crate);crateMap.delete(item.id);const i=clickables.indexOf(crate);if(i>=0)clickables.splice(i,1);}toast(`${item.name} recovered and installed · +${item.mass} kg`);}closeObjectPanel();});}
+function closeObjectPanel(){objectPanel.classList.remove('open');objectPanel.setAttribute('aria-hidden','true');}
+document.getElementById('closeObjectPanel').addEventListener('click',closeObjectPanel);
+document.getElementById('controlToggle').addEventListener('click',()=>setSidebar(!sidebar.classList.contains('open')));document.getElementById('closeControls').addEventListener('click',()=>setSidebar(false));
+document.getElementById('pauseButton').addEventListener('click',()=>{document.getElementById('pauseOverlay').classList.add('open');document.getElementById('pauseOverlay').setAttribute('aria-hidden','false');if(document.pointerLockElement===canvas)document.exitPointerLock();});document.getElementById('resumeButton').addEventListener('click',()=>{document.getElementById('pauseOverlay').classList.remove('open');document.getElementById('pauseOverlay').setAttribute('aria-hidden','true');canvas.requestPointerLock();});
 
-const componentMeshes = new Map();
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-function componentColor(id) { return ({ 'composite-bus':'#55bde2','solar-array':'#38a8dd','battery-pack':'#50c994','deep-space-comms':'#e9b34d','autonomy-core':'#bc8cff',optical:'#75cfff',thermal:'#ff805e',radar:'#7ee2bd',spectral:'#e2a8ff',communications:'#f3ce68' })[id] || '#69c5ed'; }
-function rebuildComponents(items = []) {
-  for (const mesh of componentMeshes.values()) { ship.remove(mesh); mesh.geometry.dispose(); }
-  componentMeshes.clear();
-  items.forEach((item, index) => {
-    const material = new THREE.MeshStandardMaterial({ color: componentColor(item.id), emissive: componentColor(item.id), emissiveIntensity: 0.12, metalness: 0.52, roughness: 0.3 });
-    const instrument = item.category === 'instrument';
-    let geometry = instrument ? new THREE.CylinderGeometry(0.22, 0.28, 0.48, 12) : new THREE.BoxGeometry(0.55, 0.42, 0.5);
-    const part = new THREE.Mesh(geometry, material);
-    const slot = index % 5;
-    part.position.set(-0.8 + slot * 0.4, 0.58 + Math.floor(index / 5) * 0.43, index % 2 ? -0.28 : 0.28);
-    part.castShadow = true; part.userData.componentId = item.id; part.userData.category = item.category; part.userData.name = item.name;
-    ship.add(part); componentMeshes.set(item.id, part);
-  });
-}
-canvas.addEventListener('click', event => {
-  const rect = canvas.getBoundingClientRect(); pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects([...componentMeshes.values()], false)[0];
-  if (!hit) return;
-  const { componentId, category, name } = hit.object.userData;
-  window.spaceMissionGameDesign?.removeComponent(category, componentId);
-  const toast = document.getElementById('stageToast'); toast.textContent = `${name} removed · mass and resources updated`; toast.classList.add('visible'); setTimeout(() => toast.classList.remove('visible'), 2200);
-});
-canvas.addEventListener('pointermove', event => {
-  const rect = canvas.getBoundingClientRect(); pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera); canvas.style.cursor = raycaster.intersectObjects([...componentMeshes.values()], false).length ? 'pointer' : 'grab';
-});
-let dragging = false, previous = { x: 0, y: 0 }, userMoved = false;
-canvas.addEventListener('pointerdown', e => { dragging = true; previous = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener('pointerup', () => { dragging = false; });
-canvas.addEventListener('pointermove', e => { if (!dragging || e.buttons !== 1) return; const dx=e.clientX-previous.x, dy=e.clientY-previous.y; previous={x:e.clientX,y:e.clientY}; if(Math.abs(dx)+Math.abs(dy)>1)userMoved=true; camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),-dx*.006); camera.position.y=Math.max(2.8,Math.min(9,camera.position.y+dy*.018)); camera.lookAt(0,1.15,0); });
-function resize() { const rect=stage.getBoundingClientRect(); const width=Math.max(1,rect.width), height=Math.max(250,Math.min(440,width*.45)); renderer.setSize(width,height,false); camera.aspect=width/height;camera.updateProjectionMatrix(); }
-new ResizeObserver(resize).observe(stage);resize();camera.lookAt(0,1.1,0);
-window.renderSpacecraft3D = rebuildComponents;
-if (window.spaceMissionGameDesign) rebuildComponents(window.spaceMissionGameDesign.components);
-const clock = new THREE.Clock();
-function animate() { requestAnimationFrame(animate); const time=clock.getElapsedTime(); ship.rotation.y=userMoved?ship.rotation.y:Math.sin(time*.22)*.13; crew[0].rotation.y=-.52+Math.sin(time*.8)*.04; crew[1].rotation.y=.6-Math.sin(time*.8)*.04; renderer.render(scene,camera); }
-animate();
+const keys=new Set();window.addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyE'&&!e.repeat){if(nearby)showObjectPanel(nearby);else toast('No salvage or ship object in reach.');}if(e.code==='Escape'&&objectPanel.classList.contains('open'))closeObjectPanel();});window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>keys.clear());
+canvas.addEventListener('click',event=>{if(sidebar.classList.contains('open')||objectPanel.classList.contains('open'))return;if(!locked){canvas.requestPointerLock?.();const rect=canvas.getBoundingClientRect();pointer.set(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(clickables,true)[0];if(hit){let obj=hit.object;while(obj&&!obj.userData.kind&&!obj.userData.component)obj=obj.parent;if(obj)showObjectPanel(obj);}return;}raycaster.setFromCamera(center,camera);const hit=raycaster.intersectObjects(clickables,true)[0];if(hit){let obj=hit.object;while(obj&&!obj.userData.kind&&!obj.userData.component)obj=obj.parent;if(obj)showObjectPanel(obj);}});
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;document.body.classList.toggle('pointer-locked',locked);});document.addEventListener('mousemove',e=>{if(!locked||sidebar.classList.contains('open'))return;yaw-=e.movementX*.0022;pitch=Math.max(-.55,Math.min(.4,pitch-e.movementY*.0018));});
+
+// Hotbar is real cargo: drag a recovered item onto the ship scene to install it.
+function renderHotbar(){const bar=document.getElementById('inventoryHotbar');const items=window.spaceMissionGameDesign?.cargo||[];if(!items.length){bar.innerHTML='<div class="empty-inventory">Explore the crates to find ship components</div>';return;}bar.innerHTML=items.map((item,index)=>`<button class="inventory-slot" type="button" draggable="true" data-cargo="${item.id}" title="Drag ${item.name} onto the ark to install"><span class="slot-number">${index+1}</span><span class="slot-icon">${item.category==='instrument'?'◉':'▰'}</span><strong>${item.name}</strong><small>${item.mass} kg</small></button>`).join('');bar.querySelectorAll('[data-cargo]').forEach(button=>button.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',JSON.stringify({id:button.dataset.cargo,category:'cargo'}));e.dataTransfer.effectAllowed='move';button.classList.add('dragging');}));}
+const gameCanvas=canvas;gameCanvas.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';world.classList.add('drop-hover');});gameCanvas.addEventListener('dragleave',()=>world.classList.remove('drop-hover'));gameCanvas.addEventListener('drop',e=>{e.preventDefault();world.classList.remove('drop-hover');try{const payload=JSON.parse(e.dataTransfer.getData('text/plain'));if(payload.category==='cargo'){const result=window.spaceMissionGameDesign?.installCargo(payload.id);if(result){toast(`${result.name} installed · mass ${result.mass} kg`);renderHotbar();}else toast('That cargo is no longer available.');}}catch{}});
+window.addEventListener('spacegameinventory',renderHotbar);
+
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
+window.addEventListener('resize',resize);resize();
+const clock=new THREE.Clock(),forward=new THREE.Vector3(),right=new THREE.Vector3();
+function updatePlayer(dt){const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?11:6;forward.set(-Math.sin(yaw),0,-Math.cos(yaw));right.set(Math.cos(yaw),0,-Math.sin(yaw));let moving=false;if(keys.has('KeyW')){player.position.addScaledVector(forward,speed*dt);moving=true;}if(keys.has('KeyS')){player.position.addScaledVector(forward,-speed*dt);moving=true;}if(keys.has('KeyD')){player.position.addScaledVector(right,speed*dt);moving=true;}if(keys.has('KeyA')){player.position.addScaledVector(right,-speed*dt);moving=true;}player.position.x=THREE.MathUtils.clamp(player.position.x,-85,85);player.position.z=THREE.MathUtils.clamp(player.position.z,-85,50);if(moving)player.rotation.y=yaw+Math.PI;player.userData.step=(player.userData.step||0)+dt*(moving?12:2);player.position.y=moving?Math.abs(Math.sin(player.userData.step))*.07:0;}
+function updateCamera(){const offset=new THREE.Vector3(Math.sin(yaw)*8,4.2+pitch*4,Math.cos(yaw)*8);camera.position.set(player.position.x+offset.x,player.position.y+offset.y,player.position.z+offset.z);const look=new THREE.Vector3(player.position.x-Math.sin(yaw)*7,player.position.y+1.6+pitch*9,player.position.z-Math.cos(yaw)*7);camera.lookAt(look);}
+function updatePrompt(){raycaster.setFromCamera(center,camera);const hit=raycaster.intersectObjects(clickables,true).find(h=>h.distance<5.5);if(hit){let obj=hit.object;while(obj&&!obj.userData.kind&&!obj.userData.component)obj=obj.parent;nearby=obj||null;}else nearby=null;prompt.classList.toggle('visible',Boolean(nearby)&&!sidebar.classList.contains('open')&&!objectPanel.classList.contains('open'));if(nearby){const item=nearby.userData.item||nearby.userData.component;prompt.querySelector('span').textContent=nearby.userData.kind==='crate'?`Open crate · ${item?.name||'salvage'}`:nearby.userData.kind==='installed'?`Inspect ${item?.name||'hardware'}`:'Inspect ark';}const mass=window.spaceMissionGameDesign?.totalMass;if(mass)document.getElementById('worldMass').textContent=`SHIP MASS ${mass.toLocaleString()} KG`;}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);updatePlayer(dt);updateCamera();updatePrompt();earth.rotation.y+=dt*.003;earthCloud.rotation.y-=dt*.002;starMat.opacity=.82+Math.sin(clock.elapsedTime*.3)*.08;renderer.render(scene,camera);}
+window.renderSpacecraft3D=rebuildInstalled;window.addEventListener('spacegamecomponents',e=>{rebuildInstalled(e.detail||[]);});setTimeout(()=>{populateCrates();rebuildInstalled(window.spaceMissionGameDesign?.components||[]);renderHotbar();},0);animate();
