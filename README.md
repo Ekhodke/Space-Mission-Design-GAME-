@@ -1,51 +1,25 @@
 # Space Mission Design Game
 
-A browser-based interactive strategy game where players plan a complete space mission by balancing scientific objectives, spacecraft design, orbit choices, and mission resources.
+A browser-based mission-design game where players assemble a spacecraft, balance real engineering trade-offs, complete hands-on control-panel tasks, and simulate a mission. The hangar includes an interactive Three.js scene with a spacecraft and 3D astronaut crew.
 
-## Features
+## Play
 
-- Mission objective selection with different mission profiles
-- Spacecraft bus and payload configuration
-- Scientific instrument trade-offs
-- Orbit and launch vehicle compatibility checks
-- Resource management for budget, mass, power, data, communication, and lifetime
-- Team role setup for up to four players
-- Mission scoring and post-simulation report
-- No build step required; open `index.html` in a browser
-
-## Run locally
-
-Open `index.html` directly in any modern browser.
-
-If you prefer a local server:
+Open `index.html` in a modern browser with an internet connection (the 3D view loads Three.js from jsDelivr). Or serve the folder locally:
 
 ```bash
-cd /path/to/Space-Mission-Design-GAME-
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000`.
+Then visit `http://localhost:8000`.
 
-## How to play
+## Game features
 
-1. Pick a mission objective.
-2. Choose a difficulty level.
-3. Configure the spacecraft with components and instruments.
-4. Select an orbit and launch vehicle.
-5. Assign team roles if playing cooperatively.
-6. Click `Simulate Mission` to evaluate the mission.
-7. Review the score, risk analysis, and recommendations.
+- Select from five mission objectives and three difficulty settings.
+- Configure a team of one to four players and assign crew roles.
+- **Build by hand:** drag a bus system or science instrument into the 3D assembly bay. Installed parts appear on the spacecraft; click a part to remove it. You can also click component cards to toggle hardware.
+- Rotate the 3D view by dragging, and inspect the astronaut crew in the hangar.
+- Watch mass, power, budget, science data, communications, lifetime, payload margin, and mission risk update as the design changes.
+- Complete three control-panel tasks: route a circuit sequence, calibrate a sensor dial, and align the antenna bearing.
+- Choose an orbit and compatible launch vehicle, then run the mission simulation for a design-review score and debrief.
 
-## Mission concepts included
-
-- Earth climate monitoring
-- Lunar resource prospecting
-- Mars sample return support
-- Deep space observatory
-- Planetary defense early warning
-
-## Files
-
-- `index.html` — game interface
-- `style.css` — mission UI styling
-- `script.js` — game logic and simulation
+All mission values are simplified for learning and are not flight-certified. The application is front-end only; team size and roles are local game setup rather than networked multiplayer.

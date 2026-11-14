@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07131f" />
     <title>Space Mission Design Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,109 +14,68 @@
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Mission Control</p>
+          <p class="eyebrow">Mission Control · Training Bay 04</p>
           <h1>Space Mission Design Game</h1>
         </div>
         <div class="header-actions">
-          <button id="resetMission" class="ghost-button">Reset</button>
-          <button id="simulateMission" class="primary-button">Simulate Mission</button>
+          <button id="resetMission" class="ghost-button" type="button">Reset</button>
+          <button id="simulateMission" class="primary-button" type="button">Simulate Mission</button>
         </div>
       </header>
 
       <main class="game-layout">
         <aside class="panel mission-panel">
-          <div class="panel-header">
-            <h2>Mission Setup</h2>
-          </div>
-
-          <section>
-            <h3>Objective</h3>
-            <div id="objectiveList" class="card-list"></div>
-          </section>
-
-          <section>
-            <h3>Difficulty</h3>
-            <div id="difficultyList" class="chip-list"></div>
-          </section>
-
+          <div class="panel-header"><h2>Mission Setup</h2><span class="live-tag">● LIVE</span></div>
+          <section><h3>Objective</h3><div id="objectiveList" class="card-list"></div></section>
+          <section><h3>Difficulty</h3><div id="difficultyList" class="chip-list"></div></section>
           <section>
             <h3>Team Mode</h3>
-            <div class="team-size-row">
-              <label for="teamSize">Players</label>
-              <select id="teamSize">
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
-            </div>
+            <div class="team-size-row"><label for="teamSize">Crew members</label><select id="teamSize"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div>
             <div id="roleList" class="role-list"></div>
           </section>
+          <section class="crew-brief"><h3>Flight crew</h3><p>Your 3D crew is standing by in the assembly bay. Build together, then run the console checks before launch.</p></section>
         </aside>
 
         <section class="panel center-panel">
-          <div class="panel-header">
-            <h2>Spacecraft Configuration</h2>
+          <div class="panel-header"><div><p class="eyebrow">Hangar 01</p><h2>Build your spacecraft</h2></div><span class="drag-hint">DRAG PARTS INTO THE BAY</span></div>
+          <div id="spacecraftStage" class="spacecraft-stage" aria-label="Interactive 3D spacecraft assembly bay">
+            <div class="stage-label"><span>ASSEMBLY BAY</span><span id="buildMass">LOADING 3D VIEW…</span></div>
+            <canvas id="spaceCanvas" aria-label="3D view of your spacecraft and astronaut crew"></canvas>
+            <div class="stage-controls"><span>Drag a component card here to add it</span><span>Click a spacecraft part to remove it</span></div>
+            <div id="stageToast" class="stage-toast" role="status" aria-live="polite"></div>
           </div>
-
           <div class="config-grid">
-            <section>
-              <h3>Bus Systems</h3>
-              <div id="busList" class="config-list"></div>
-            </section>
-
-            <section>
-              <h3>Scientific Instruments</h3>
-              <div id="instrumentList" class="config-list"></div>
-            </section>
+            <section><div class="section-title-row"><h3>Spacecraft systems</h3><span>Drag to add · click to toggle</span></div><div id="busList" class="config-list"></div></section>
+            <section><div class="section-title-row"><h3>Science payload</h3><span>Every instrument adds mass</span></div><div id="instrumentList" class="config-list"></div></section>
           </div>
-
           <div class="config-grid compact-grid">
-            <section>
-              <h3>Orbit</h3>
-              <div id="orbitList" class="card-list small-card-list"></div>
-            </section>
-
-            <section>
-              <h3>Launch Vehicle</h3>
-              <div id="launchList" class="card-list small-card-list"></div>
-            </section>
+            <section><h3>Orbit</h3><div id="orbitList" class="card-list small-card-list"></div></section>
+            <section><h3>Launch vehicle</h3><div id="launchList" class="card-list small-card-list"></div></section>
           </div>
+          <section class="control-lab">
+            <div class="panel-header"><div><p class="eyebrow">Hands-on systems check</p><h2>Flight control panel</h2></div><span id="taskProgress" class="task-progress">0 / 3 CHECKS</span></div>
+            <p class="lab-intro">Complete the quick crew tasks to verify power, instrument calibration, and the communications link.</p>
+            <div class="task-grid">
+              <article class="task-card"><div class="task-heading"><span class="task-icon">⚡</span><div><h3>Route power</h3><p>Repeat the illuminated circuit sequence.</p></div></div><div id="powerSequence" class="power-sequence" aria-live="polite"></div><div id="powerButtons" class="power-buttons"></div></article>
+              <article class="task-card"><div class="task-heading"><span class="task-icon">◎</span><div><h3>Calibrate sensor</h3><p>Set the dial to the target, then confirm.</p></div></div><div class="dial-readout"><span>Target <strong id="calibrationTarget">72</strong>°</span><output id="calibrationValue">50°</output></div><input id="calibrationDial" type="range" min="0" max="100" value="50" aria-label="Sensor calibration dial"/><button id="calibrationConfirm" class="task-button" type="button">Confirm calibration</button></article>
+              <article class="task-card"><div class="task-heading"><span class="task-icon">⌁</span><div><h3>Align antenna</h3><p>Match the signal bearing for a clean link.</p></div></div><div class="dial-readout"><span>Bearing <strong id="antennaTarget">38</strong>°</span><output id="antennaValue">50°</output></div><input id="antennaDial" type="range" min="0" max="100" value="50" aria-label="Antenna alignment dial"/><button id="antennaConfirm" class="task-button" type="button">Lock signal</button></article>
+            </div>
+            <p id="taskFeedback" class="task-feedback" aria-live="polite">Power up the panels to begin your systems check.</p>
+          </section>
         </section>
 
         <aside class="panel resources-panel">
-          <div class="panel-header">
-            <h2>Mission Dashboard</h2>
-          </div>
-
+          <div class="panel-header"><h2>Mission Dashboard</h2><span class="live-tag">● LIVE</span></div>
           <div id="resourceList" class="resource-list"></div>
-
-          <div class="status-box">
-            <h3>Mission Readiness</h3>
-            <div class="readiness-row">
-              <span>Payload Margin</span>
-              <strong id="payloadMargin">0 kg</strong>
-            </div>
-            <div class="readiness-row">
-              <span>Scientific Fit</span>
-              <strong id="scienceFit">0%</strong>
-            </div>
-            <div class="readiness-row">
-              <span>Risk Level</span>
-              <strong id="riskLevel">Low</strong>
-            </div>
-          </div>
+          <div class="status-box"><h3>Mission Readiness</h3><div class="readiness-row"><span>Payload margin</span><strong id="payloadMargin">0 kg</strong></div><div class="readiness-row"><span>Scientific fit</span><strong id="scienceFit">0%</strong></div><div class="readiness-row"><span>Risk level</span><strong id="riskLevel">Low</strong></div><div class="readiness-row"><span>Systems checks</span><strong id="readinessChecks">0 / 3</strong></div></div>
+          <div class="engineering-note"><strong>Engineering note</strong><p>Adding hardware increases science capability but also consumes mass, power, budget, and downlink capacity.</p></div>
         </aside>
       </main>
 
-      <section class="panel bottom-panel">
-        <div class="panel-header">
-          <h2>Mission Summary</h2>
-        </div>
-        <div id="missionReport" class="mission-report"></div>
-      </section>
+      <section class="panel bottom-panel"><div class="panel-header"><h2>Mission Summary</h2><span class="report-caption">DESIGN REVIEW</span></div><div id="missionReport" class="mission-report"></div></section>
+      <footer class="page-footer">TRAINING SIMULATION · Mission values are simplified for learning and are not flight-certified.</footer>
     </div>
-
     <script src="script.js"></script>
+    <script type="module" src="game3d.js"></script>
   </body>
 </html>
